@@ -129,13 +129,15 @@ func IsDecodeJsonLogs(c *docker.Container, a *LogstashAdapter) bool {
 }
 
 // SanitizeData returns a sanitized representation of the message that can be sent through UDP
-func SanitizeData(message string) string {
+func SanitizeData(message string) (string, bool) {
 	retStr := message
+	truncated := false
 	if len(message) > 100000 { // 60000 Character Limit
 		log.Println(fmt.Sprintf("Truncating message of length %d starting with %.1000s.", len(message), message))
 		retStr = message[0:100000]
+		truncated = true
 	}
-	return retStr
+	return retStr, truncated
 }
 
 // Stream implements the router.LogAdapter interface.
@@ -181,7 +183,7 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 		data["stream"] = m.Source
 		data["tags"] = tags
 		// Truncate/fixup data to the extent necessary to ensure the message will send to logstash correctly.
-		data["message"] = SanitizeData(fmt.Sprintf("%s", data["message"]))
+		data["message"], data["truncated"] = SanitizeData(fmt.Sprintf("%s", data["message"]))
 
 		// Return the JSON encoding
 		if js, err = json.Marshal(data); err != nil {
