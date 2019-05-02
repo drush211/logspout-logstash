@@ -190,6 +190,7 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 
 		// To work with tls and tcp transports via json_lines codec
 		js = append(js, byte('\n'))
+		failureString := fmt.Sprintf("Failed to write %d length string starting with %.1000s\n", len(js), js)
 
 		for count := 1; count <= 3; count++ {
 			_, err := a.conn.Write(js)
@@ -197,11 +198,12 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 			if err == nil {
 				break
 			} else {
-				log.Println("Failed to write %d length string starting with %.25s\n", len(js), js)
+				log.Println(failureString)
 				time.Sleep(2 * time.Second)
 			}
 			if count == 3 {
 				log.Println("Failed to successfully send message, ending retries.")
+				_, _ := a.conn.Write(failureString)
 			}
 		}
 	}
