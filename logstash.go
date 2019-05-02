@@ -8,7 +8,6 @@ import (
 	"os"
 	"strings"
 	"time"
-	"fmt"
 
 	"github.com/fsouza/go-dockerclient"
 	"github.com/gliderlabs/logspout/router"
@@ -131,8 +130,8 @@ func IsDecodeJsonLogs(c *docker.Container, a *LogstashAdapter) bool {
 // SanitizeData returns a sanitized representation of the data that can be sent through UDP
 func SanitizeData(data string) string {
 	retStr := data
-	if len(data) > 750 { // 750 Character Limit
-		retStr = data[0:750]
+	if len(data) > 850 { // 850 Character Limit
+		retStr = data[0:850]
 	}
 	return retStr
 }
@@ -166,12 +165,10 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 		// Try to parse JSON-encoded m.Data. If it wasn't JSON, create an empty object
 		// and use the original data as the message.
 		if IsDecodeJsonLogs(m.Container, a) {
-			fmt.Printf("Decoding Json %s\n", SanitizeData(m.Data))
 			err = json.Unmarshal([]byte(SanitizeData(m.Data)), &data)
 		}
 		if err != nil || data == nil {
 			data = make(map[string]interface{})
-			fmt.Printf("Setting message as %s\n", SanitizeData(m.Data))
 			data["message"] = SanitizeData(m.Data)
 		}
 
