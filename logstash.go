@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"fmt"
 
 	"github.com/fsouza/go-dockerclient"
 	"github.com/gliderlabs/logspout/router"
@@ -188,11 +189,12 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 
 		for {
 			_, err := a.conn.Write(js)
+			fmt.Printf("%s\n", js)
 
 			if err == nil {
 				break
 			}
-
+			fmt.Printf("No Break!\n")
 			if os.Getenv("RETRY_SEND") == "" {
 				log.Fatal("logstash: could not write:", err)
 			} else {
