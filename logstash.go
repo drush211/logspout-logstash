@@ -128,9 +128,13 @@ func IsDecodeJsonLogs(c *docker.Container, a *LogstashAdapter) bool {
 	return decodeJsonLogs
 }
 
-// SanitizeData returns a sanitized representation of the data that can be sent through UDP
-func SanitizeData(data string) string {
-	return data
+// SanitizeData returns a sanitized representation of the message that can be sent through UDP
+func SanitizeData(message string) string {
+	retStr := message
+	if len(message) > 100000 { // 60000 Character Limit
+		retStr = message[0:100000]
+	}
+	return retStr
 }
 
 // Stream implements the router.LogAdapter interface.
@@ -161,11 +165,11 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 		// Try to parse JSON-encoded m.Data. If it wasn't JSON, create an empty object
 		// and use the original data as the message.
 		if IsDecodeJsonLogs(m.Container, a) {
-			err = json.Unmarshal([]byte(SanitizeData(m.Data)), &data)
+			err = json.Unmarshal([]byte(m.Data), &data)
 		}
 		if err != nil || data == nil {
 			data = make(map[string]interface{})
-			data["message"] = SanitizeData(m.Data)
+			data["message"] = m.Data
 		}
 
 		for k, v := range fields {
@@ -175,6 +179,8 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 		data["docker"] = dockerInfo
 		data["stream"] = m.Source
 		data["tags"] = tags
+		// Truncate/fixup data to the extent necessary to ensure the message will send to logstash correctly.
+		data["message"] = SanitizeData(data["message"])
 
 		// Return the JSON encoding
 		if js, err = json.Marshal(data); err != nil {
@@ -186,19 +192,17 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 		// To work with tls and tcp transports via json_lines codec
 		js = append(js, byte('\n'))
 
-		for {
+		for count := 1; count <= 3; count++ {
 			_, err := a.conn.Write(js)
 
-			fmt.Printf("Length - %d\n", len(js))
 			if err == nil {
-				fmt.Printf("Break!\n")
 				break
-			}
-			fmt.Printf("No Break!\n")
-			if os.Getenv("RETRY_SEND") == "" {
-				log.Fatal("logstash: could not write:", err)
 			} else {
+				log.Println("Failed to write %d length string starting with %.25s\n", len(js), js)
 				time.Sleep(2 * time.Second)
+			}
+			if count == 3 {
+				log.Println("Failed to successfully send message, ending retries.")
 			}
 		}
 	}
