@@ -136,7 +136,6 @@ func SanitizeData(data string) string {
 
 // Stream implements the router.LogAdapter interface.
 func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
-	fail
 	for m := range logstream {
 
 		dockerInfo := DockerInfo{
