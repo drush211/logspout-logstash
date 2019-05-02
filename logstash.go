@@ -130,8 +130,9 @@ func IsDecodeJsonLogs(c *docker.Container, a *LogstashAdapter) bool {
 // SanitizeData returns a sanitized representation of the message that can be sent through UDP
 func SanitizeData(message string) string {
 	retStr := message
-	if len(message) > 100000 { // 60000 Character Limit
-		retStr = message[0:100000]
+	if len(message) > 60000 { // 60000 Character Limit
+		log.Println("Truncating message of length %d starting with %.1000s.", len(message), message)
+		retStr = message[0:60000]
 	}
 	return retStr
 }
@@ -190,7 +191,7 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 
 		// To work with tls and tcp transports via json_lines codec
 		js = append(js, byte('\n'))
-		failureString := fmt.Sprintf("Failed to write %d length string starting with %.1000s\n", len(js), js)
+		failureString := fmt.Sprintf("Failed to write %d length string starting with %.1000s", len(js), js)
 
 		for count := 1; count <= 3; count++ {
 			_, err := a.conn.Write(js)
