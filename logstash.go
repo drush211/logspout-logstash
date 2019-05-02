@@ -130,6 +130,7 @@ func IsDecodeJsonLogs(c *docker.Container, a *LogstashAdapter) bool {
 
 // SanitizeData returns a sanitized representation of the data that can be sent through UDP
 func SanitizeData(data string) string {
+	fmt.Printf("Here is the data - %s\n", data)
 	return data
 }
 
