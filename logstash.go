@@ -201,10 +201,12 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 			_, err := a.conn.Write(js)
 
 			if err == nil {
+				fmt.Printf("failed?")
 				break
 			}
 
 			if os.Getenv("RETRY_SEND") == "" {
+				fmt.Printf("Failed?")
 				log.Fatal("logstash: could not write:", err)
 			} else {
 				time.Sleep(2 * time.Second)
