@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"fmt"
 
 	"github.com/fsouza/go-dockerclient"
 	"github.com/gliderlabs/logspout/router"
@@ -180,7 +181,7 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 		data["stream"] = m.Source
 		data["tags"] = tags
 		// Truncate/fixup data to the extent necessary to ensure the message will send to logstash correctly.
-		data["message"] = SanitizeData(&data["message"])
+		data["message"] = SanitizeData(*data["message"])
 
 		// Return the JSON encoding
 		if js, err = json.Marshal(data); err != nil {
@@ -204,7 +205,7 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 			}
 			if count == 3 {
 				log.Println("Failed to successfully send message, ending retries.")
-				_, _ := a.conn.Write(failureString)
+				a.conn.Write(failureString)
 			}
 		}
 	}
