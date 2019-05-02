@@ -160,7 +160,7 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 		}
 		if err != nil || data == nil {
 			data = make(map[string]interface{})
-			data["message"] = m.Data
+			data["message"] = m.Data[:7]
 		}
 
 		for k, v := range fields {
