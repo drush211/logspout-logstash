@@ -198,6 +198,7 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 
 		fmt.Printf("Here 6")
 		for {
+			fmt.Printf("%s\n", js)
 			_, err := a.conn.Write(js)
 
 			if err == nil {
