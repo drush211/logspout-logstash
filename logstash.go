@@ -8,7 +8,6 @@ import (
 	"os"
 	"strings"
 	"time"
-	"fmt"
 
 	"github.com/fsouza/go-dockerclient"
 	"github.com/gliderlabs/logspout/router"
@@ -161,14 +160,10 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 
 		// Try to parse JSON-encoded m.Data. If it wasn't JSON, create an empty object
 		// and use the original data as the message.
-		fmt.Printf("Here 1")
 		if IsDecodeJsonLogs(m.Container, a) {
-			fmt.Printf("Here 2")
 			err = json.Unmarshal([]byte(SanitizeData(m.Data)), &data)
 		}
-		fmt.Printf("Here 3")
 		if err != nil || data == nil {
-			fmt.Printf("Here 4")
 			data = make(map[string]interface{})
 			data["message"] = SanitizeData(m.Data)
 		}
@@ -182,7 +177,6 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 		data["tags"] = tags
 
 		// Return the JSON encoding
-		fmt.Printf("Here 5")
 		if js, err = json.Marshal(data); err != nil {
 			// Log error message and continue parsing next line, if marshalling fails
 			log.Println("logstash: could not marshal JSON:", err)
@@ -192,18 +186,14 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 		// To work with tls and tcp transports via json_lines codec
 		js = append(js, byte('\n'))
 
-		fmt.Printf("Here 6")
 		for {
-			fmt.Printf("%s\n", js)
 			_, err := a.conn.Write(js)
 
 			if err == nil {
-				fmt.Printf("failed?")
 				break
 			}
 
 			if os.Getenv("RETRY_SEND") == "" {
-				fmt.Printf("Failed?")
 				log.Fatal("logstash: could not write:", err)
 			} else {
 				time.Sleep(2 * time.Second)
