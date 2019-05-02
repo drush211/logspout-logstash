@@ -129,7 +129,11 @@ func IsDecodeJsonLogs(c *docker.Container, a *LogstashAdapter) bool {
 
 // SanitizeData returns a sanitized representation of the data that can be sent through UDP
 func SanitizeData(data string) string {
-	return data[:25000] // 25000 Character Limit
+	retStr := data
+	if len(data) > 25000 { // 25000 Character Limit
+		retStr = data[0:25000]
+	}
+	return retStr
 }
 
 // Stream implements the router.LogAdapter interface.
