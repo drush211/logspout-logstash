@@ -132,7 +132,7 @@ func IsDecodeJsonLogs(c *docker.Container, a *LogstashAdapter) bool {
 func SanitizeData(message string) string {
 	retStr := message
 	if len(message) > 60000 { // 60000 Character Limit
-		log.Println("Truncating message of length %d starting with %.1000s.", len(message), message)
+		log.Println(fmt.Sprintf("Truncating message of length %d starting with %.1000s.", len(message), message))
 		retStr = message[0:60000]
 	}
 	return retStr
